@@ -6,7 +6,7 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-// GET /api/auth/register
+// POST /api/auth/register
 // PUBLIC
 router.post('/register', [
   check('username').trim().isAlphanumeric().withMessage('Characters and numbers only').isLength({ min: 5, max: 30 }).withMessage('Username has to be between 5 and 30 characters'),
