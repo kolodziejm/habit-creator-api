@@ -48,20 +48,24 @@ router.post('/login', [
   check('password').isLength({ min: 5 }).withMessage('Provided password is incorrect')
 ], async (req, res, next) => {
   const { username, password } = req.body;
-  const user = await User.findOne({ username });
-  if (!user) return res.status(422).json({ msg: 'user doesn\'t exist' });
+  try {
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ msg: 'User doesn\'t exist' });
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) return res.status(422).json({ msg: 'Wrong password' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ msg: 'Wrong password' });
 
-  const payload = {
-    userId: user._id,
-    username: user.username
-  };
+    const payload = {
+      userId: user._id,
+      username: user.username
+    };
 
-  jwt.sign(payload, secret, { expiresIn: 86400 }, (err, token) => {
-    return res.status(200).json({ token });
-  });
+    jwt.sign(payload, secret, { expiresIn: "1d" }, (err, token) => {
+      return res.status(200).json({ token: `Bearer ${token}` });
+    });
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 module.exports = router;
