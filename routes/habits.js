@@ -74,4 +74,20 @@ router.patch('/:habitId', passport.authenticate('jwt', { session: false }), [
   }
 });
 
+// DELETE /api/habits/:habitId
+router.delete('/:habitId', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
+  try {
+    const habit = await Habit.findById(req.params.habitId);
+    if (req.user.id !== habit.userId.toString()) {
+      return res.status(422).json({ msg: 'Not authorized' });
+    }
+    await habit.remove();
+    res.json({ msg: 'Habit successfully deleted' });
+
+  } catch (err) {
+    console.log(err);
+    res.json({ msg: 'Couldn\'t delete the habit' })
+  }
+});
+
 module.exports = router;
