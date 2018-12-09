@@ -7,7 +7,7 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-// GET /api/habits/
+// GET /api/habits
 // PRIVATE
 router.get('/', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
   try {
@@ -20,7 +20,7 @@ router.get('/', passport.authenticate('jwt', { session: false }), async (req, re
   }
 });
 
-// POST /api/habits/
+// POST /api/habits
 // Private
 router.post('/', passport.authenticate('jwt', { session: false }), [
   check('name').not().isEmpty().withMessage('Enter a habit name').isLength({ max: 150 }).withMessage('Habit name has to be below 150 characters')
@@ -30,25 +30,47 @@ router.post('/', passport.authenticate('jwt', { session: false }), [
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  // CHECK HOW MANY HABITS ARE PRESENT, IF 10 - RETURN AN ERROR, 15 IS A LIMIT
+
   try {
     const currentHabits = await Habit.find({ userId: req.user.id });
-    console.log(currentHabits);
     if (currentHabits.length >= 10) {
       return res.status(400).json({ msg: 'Maximum of 10 habits are allowed' });
     }
-
     const { name } = req.body;
     const newHabit = new Habit({
       name,
       userId: req.user.id
     });
-
     const habit = await newHabit.save();
-    res.json(habit);
+    res.status(201).json(habit);
   } catch (err) {
     console.log(err);
     res.status(400).json({ msg: 'Habit creation failed' })
+  }
+});
+
+// PATCH /api/habits/:habitId
+// Private
+router.patch('/:habitId', passport.authenticate('jwt', { session: false }), [
+  check('name').not().isEmpty().withMessage('Enter a habit name').isLength({ max: 150 }).withMessage('Habit name has to be below 150 characters')
+], async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { name } = req.body;
+  try {
+    const habit = await Habit.findById(req.params.habitId);
+    if (req.user.id !== habit.userId.toString()) {
+      return res.status(422).json({ msg: 'Not authorized' });
+    }
+    habit.name = name;
+    const updatedHabit = await habit.save();
+    res.json(updatedHabit);
+  } catch (err) {
+    console.log(err);
+    res.json({ msg: 'Couldn\'t update the habit' })
   }
 });
 
