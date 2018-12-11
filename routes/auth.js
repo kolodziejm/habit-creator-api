@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const secret = require('../config/keys').secret;
 
+const createErrorObj = require('../utils/createErrorObj');
+
 const User = require('../models/User');
 
 const router = express.Router();
@@ -19,7 +21,10 @@ router.post('/register', [
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    const errArr = errors.array();
+    const errObj = createErrorObj(errArr);
+    console.log(errObj);
+    return res.status(400).json({ errObj });
   }
 
   try {
