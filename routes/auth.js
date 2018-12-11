@@ -42,7 +42,7 @@ router.post('/register', [
 
   } catch (err) {
     console.log(err);
-    throw err;
+    res.status(404).json(err);
   }
 })
 
@@ -79,6 +79,7 @@ router.post('/login', [
     });
   } catch (err) {
     console.log(err);
+    res.status(404).json(err);
   }
 });
 

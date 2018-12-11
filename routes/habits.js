@@ -90,4 +90,6 @@ router.delete('/:habitId', passport.authenticate('jwt', { session: false }), asy
   }
 });
 
+// TODO: habit finish, unfinish, checkStreak routes!
+
 module.exports = router;
