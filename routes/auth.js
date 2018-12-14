@@ -42,7 +42,7 @@ router.post('/register', [
 
   } catch (err) {
     console.log(err);
-    res.status(404).json(err);
+    res.status(404).json({ errObj: { username: 'Register error' } });
   }
 })
 
@@ -74,12 +74,12 @@ router.post('/login', [
       username: user.username
     };
 
-    jwt.sign(payload, secret, { expiresIn: "1d" }, (err, token) => {
+    jwt.sign(payload, secret, { expiresIn: "3d" }, (err, token) => {
       return res.status(200).json({ token: `Bearer ${token}` });
     });
   } catch (err) {
     console.log(err);
-    res.status(404).json(err);
+    res.status(404).json({ errObj: { username: 'Login error' } });
   }
 });
 

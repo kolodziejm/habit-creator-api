@@ -5,6 +5,8 @@ const { check, validationResult } = require('express-validator/check');
 const Habit = require('../models/Habit');
 const User = require('../models/User');
 
+const createErrorObj = require('../utils/createErrorObj');
+
 const router = express.Router();
 
 // GET /api/habits
@@ -28,13 +30,14 @@ router.post('/', passport.authenticate('jwt', { session: false }), [
 ], async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    const errObj = createErrorObj(errors.array());
+    return res.status(400).json({ errObj });
   }
 
   try {
     const currentHabits = await Habit.find({ userId: req.user.id });
     if (currentHabits.length >= 10) {
-      return res.status(400).json({ msg: 'Maximum of 10 habits are allowed' });
+      return res.status(400).json({ errObj: { name: 'Maximum of 10 habits are allowed' } });
     }
     const { name } = req.body;
     const newHabit = new Habit({
@@ -52,25 +55,26 @@ router.post('/', passport.authenticate('jwt', { session: false }), [
 // PATCH /api/habits/:habitId
 // Private
 router.patch('/:habitId', passport.authenticate('jwt', { session: false }), [
-  check('name').not().isEmpty().withMessage('Enter a habit name').isLength({ max: 150 }).withMessage('Habit name has to be below 150 characters')
+  check('editHabitName').not().isEmpty().withMessage('Enter a habit name').isLength({ max: 150 }).withMessage('Habit name has to be below 150 characters')
 ], async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    const errObj = createErrorObj(errors.array());
+    return res.status(400).json({ errObj });
   }
 
-  const { name } = req.body;
+  const { editHabitName } = req.body;
   try {
     const habit = await Habit.findById(req.params.habitId);
     if (req.user.id !== habit.userId.toString()) {
-      return res.status(422).json({ msg: 'Not authorized' });
+      return res.status(422).json({ errObj: { msg: 'Not authorized' } });
     }
-    habit.name = name;
+    habit.name = editHabitName;
     const updatedHabit = await habit.save();
     res.json(updatedHabit);
   } catch (err) {
     console.log(err);
-    res.json({ msg: 'Couldn\'t update the habit' })
+    res.json({ errObj: { msg: 'Couldn\'t update the habit' } })
   }
 });
 
