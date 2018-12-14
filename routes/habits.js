@@ -18,7 +18,7 @@ router.get('/', passport.authenticate('jwt', { session: false }), async (req, re
   } catch (err) {
     res.status(404).json({
       msg: 'Couldn\'t fetch habits'
-    })
+    });
   }
 });
 
@@ -48,7 +48,7 @@ router.post('/', passport.authenticate('jwt', { session: false }), [
     res.status(201).json(habit);
   } catch (err) {
     console.log(err);
-    res.status(400).json({ msg: 'Habit creation failed' })
+    res.status(400).json({ msg: 'Habit creation failed' });
   }
 });
 
@@ -74,11 +74,12 @@ router.patch('/:habitId', passport.authenticate('jwt', { session: false }), [
     res.json(updatedHabit);
   } catch (err) {
     console.log(err);
-    res.json({ errObj: { msg: 'Couldn\'t update the habit' } })
+    res.status(400).json({ errObj: { msg: 'Couldn\'t update the habit' } });
   }
 });
 
 // DELETE /api/habits/:habitId
+// Private
 router.delete('/:habitId', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
   try {
     const habit = await Habit.findById(req.params.habitId);
@@ -90,10 +91,33 @@ router.delete('/:habitId', passport.authenticate('jwt', { session: false }), asy
 
   } catch (err) {
     console.log(err);
-    res.json({ msg: 'Couldn\'t delete the habit' })
+    res.status(400).json({ msg: 'Couldn\'t delete the habit' });
   }
 });
 
-// TODO: habit finish, unfinish, checkStreak routes!
+// PATCH /api/habits/finish/:habitId
+// Private
+router.patch('/finish/:habitId', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
+  try {
+    const habit = await Habit.findById(req.params.habitId);
+    if (req.user.id !== habit.userId.toString()) {
+      return res.status(422).json({ msg: 'Not authorized' });
+    }
+    if (habit.isFinished) {
+      return res.status(422).json({ msg: 'Habit is already finished' });
+    }
+    habit.isFinished = true;
+    habit.lastDateFinished = new Date().toISOString();
+    habit.streak++;
+    await habit.save();
+    res.json({ msg: 'Habit saved as finished!' });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({ msg: 'Couldn\'t finish the habit' });
+  }
+});
+
+// TODO: checkStreakDate for reset route!
+// in auth, checkLastActivityDate (dodac do modelu usera lastActivityDate)
 
 module.exports = router;
