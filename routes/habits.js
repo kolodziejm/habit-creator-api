@@ -18,8 +18,8 @@ router.get('/', passport.authenticate('jwt', { session: false }), async (req, re
     const user = await User.findById(req.user.id);
     const now = new Date().toISOString();
     const userDaysDiff = differenceInCalendarDays(now, user.lastActiveDate)
-    console.log(userDaysDiff);
     if (userDaysDiff >= 1) {
+      await Habit.updateMany({ isFinished: false }, { streak: 0 });
       await Habit.updateMany({}, { isFinished: false });
       if (userDaysDiff >= 2) {
         await Habit.updateMany({}, { streak: 0 })
