@@ -1,12 +1,15 @@
 const express = require('express');
+const passport = require('passport');
 const { check, validationResult } = require('express-validator/check');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const secret = require('../config/keys').secret;
+const differenceInCalendarDays = require('date-fns/difference_in_calendar_days');
 
 const createErrorObj = require('../utils/createErrorObj');
 
 const User = require('../models/User');
+const Habit = require('../models/Habit');
 
 const router = express.Router();
 
@@ -35,7 +38,7 @@ router.post('/register', [
     const hashedPw = await bcrypt.hash(password, 12);
     const newUser = new User({
       username,
-      password: hashedPw
+      password: hashedPw,
     });
     await newUser.save();
     res.json({ success: true });
@@ -68,6 +71,19 @@ router.post('/login', [
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ errObj: { password: 'Wrong password' } });
+
+    const now = new Date().toISOString();
+    const userDaysDiff = differenceInCalendarDays(now, user.lastActiveDate)
+    console.log(userDaysDiff);
+    if (userDaysDiff >= 1) {
+      await Habit.updateMany({}, { isFinished: false });
+      if (userDaysDiff >= 2) {
+        await Habit.updateMany({}, { streak: 0 })
+      }
+    }
+
+    user.lastActiveDate = now;
+    await user.save();
 
     const payload = {
       userId: user._id,

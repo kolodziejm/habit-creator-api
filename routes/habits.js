@@ -5,6 +5,8 @@ const { check, validationResult } = require('express-validator/check');
 const Habit = require('../models/Habit');
 const User = require('../models/User');
 
+const differenceInCalendarDays = require('date-fns/difference_in_calendar_days');
+
 const createErrorObj = require('../utils/createErrorObj');
 
 const router = express.Router();
@@ -13,6 +15,18 @@ const router = express.Router();
 // PRIVATE
 router.get('/', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
   try {
+    const user = await User.findById(req.user.id);
+    const now = new Date().toISOString();
+    const userDaysDiff = differenceInCalendarDays(now, user.lastActiveDate)
+    console.log(userDaysDiff);
+    if (userDaysDiff >= 1) {
+      await Habit.updateMany({}, { isFinished: false });
+      if (userDaysDiff >= 2) {
+        await Habit.updateMany({}, { streak: 0 })
+      }
+      user.lastActiveDate = now;
+      await user.save();
+    }
     const habits = await Habit.find({ userId: req.user.id }).sort({ createdAt: -1 });
     res.json(habits);
   } catch (err) {
