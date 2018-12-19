@@ -39,8 +39,9 @@ router.get('/', passport.authenticate('jwt', { session: false }), async (req, re
 // POST /api/habits
 // Private
 router.post('/', passport.authenticate('jwt', { session: false }), [
-  check('name').not().isEmpty().withMessage('Enter a habit name').isLength({ max: 150 }).withMessage('Habit name has to be below 150 characters')
-  // TODO: CHECK IF COLOR IS PRESENT
+  check('name').not().isEmpty().withMessage('Enter a habit name').isLength({ max: 150 }).withMessage('Habit name has to be below 150 characters'),
+  check('color').not().isEmpty().withMessage('Choose a color').isLength({ min: 4, max: 7 }).withMessage('Incorrect color format'),
+  check('difficulty').not().isEmpty().withMessage('Difficulty not selected').isIn(['easy', 'medium', 'hard']).withMessage('Wrong difficulty')
 ], async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -53,10 +54,12 @@ router.post('/', passport.authenticate('jwt', { session: false }), [
     if (currentHabits.length >= 10) {
       return res.status(400).json({ errObj: { name: 'Maximum of 10 habits are allowed' } });
     }
-    const { name } = req.body;
+    const { name, color, difficulty } = req.body;
     const newHabit = new Habit({
       name,
-      userId: req.user.id
+      userId: req.user.id,
+      difficulty,
+      color
     });
     const habit = await newHabit.save();
     res.status(201).json(habit);
