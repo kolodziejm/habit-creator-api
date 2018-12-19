@@ -72,7 +72,9 @@ router.post('/', passport.authenticate('jwt', { session: false }), [
 // PATCH /api/habits/:habitId
 // Private
 router.patch('/:habitId', passport.authenticate('jwt', { session: false }), [
-  check('editHabitName').not().isEmpty().withMessage('Enter a habit name').isLength({ max: 150 }).withMessage('Habit name has to be below 150 characters')
+  check('name').not().isEmpty().withMessage('Enter a habit name').isLength({ max: 150 }).withMessage('Habit name has to be below 150 characters'),
+  check('color').not().isEmpty().withMessage('Choose a color').isLength({ min: 4, max: 7 }).withMessage('Incorrect color format'),
+  check('difficulty').not().isEmpty().withMessage('Difficulty not selected').isIn(['easy', 'medium', 'hard']).withMessage('Wrong difficulty')
 ], async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -80,13 +82,15 @@ router.patch('/:habitId', passport.authenticate('jwt', { session: false }), [
     return res.status(400).json({ errObj });
   }
 
-  const { editHabitName } = req.body;
+  const { name, color, difficulty } = req.body;
   try {
     const habit = await Habit.findById(req.params.habitId);
     if (req.user.id !== habit.userId.toString()) {
       return res.status(422).json({ errObj: { msg: 'Not authorized' } });
     }
-    habit.name = editHabitName;
+    habit.name = name;
+    habit.color = color;
+    habit.difficulty = difficulty;
     const updatedHabit = await habit.save();
     res.json(updatedHabit);
   } catch (err) {
