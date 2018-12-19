@@ -138,7 +138,4 @@ router.patch('/finish/:habitId', passport.authenticate('jwt', { session: false }
   }
 });
 
-// TODO: checkStreakDate for reset route!
-// in auth, checkLastActivityDate (dodac do modelu usera lastActivityDate)
-
 module.exports = router;
