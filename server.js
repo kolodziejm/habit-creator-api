@@ -8,6 +8,7 @@ const passportConfig = require('./config/passport');
 
 const authRoutes = require('./routes/auth');
 const habitsRoutes = require('./routes/habits');
+const shopRoutes = require('./routes/shop');
 
 const db = require('./config/keys').mongoURI;
 
@@ -25,6 +26,7 @@ passportConfig(passport);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/habits', habitsRoutes);
+app.use('/api/shop', shopRoutes);
 
 mongoose.connect(db)
   .then(res => {

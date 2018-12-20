@@ -31,7 +31,6 @@ const habitSchema = new Schema({
     type: Date,
     default: null
   }
-  // TODO: Add color field which is required
 }, { timestamps: true });
 
 module.exports = mongoose.model('habits', habitSchema);
