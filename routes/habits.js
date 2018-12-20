@@ -82,15 +82,15 @@ router.patch('/:habitId', passport.authenticate('jwt', { session: false }), [
     return res.status(400).json({ errObj });
   }
 
-  const { name, color, difficulty } = req.body;
+  const { editHabitName, editHabitColor, editHabitDiff } = req.body;
   try {
     const habit = await Habit.findById(req.params.habitId);
     if (req.user.id !== habit.userId.toString()) {
       return res.status(422).json({ errObj: { msg: 'Not authorized' } });
     }
-    habit.name = name;
-    habit.color = color;
-    habit.difficulty = difficulty;
+    habit.name = editHabitName;
+    habit.color = editHabitColor;
+    habit.difficulty = editHabitDiff;
     const updatedHabit = await habit.save();
     res.json(updatedHabit);
   } catch (err) {
