@@ -3,6 +3,7 @@ const passport = require('passport');
 const { check, validationResult } = require('express-validator/check');
 
 const User = require('../models/User');
+const Reward = require('../models/Reward');
 
 const createErrorObj = require('../utils/createErrorObj');
 
@@ -13,18 +14,21 @@ const router = express.Router();
 router.get('/', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
-
+    const rewards = await Reward.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    res.json({ rewards, coins: user.coins });
   } catch (err) {
-    res.status(404).json({ errObj: { msg: 'Failed to fetch' } });
+    res.status(404).json({ msg: 'Failed to fetch' });
   }
 });
 
-// POST /api/shop
+// POST /api/shop/add-reward
 // PRIVATE
-router.post('/', passport.authenticate('jwt', { session: false }), [
+router.post('/add-reward', passport.authenticate('jwt', { session: false }), [
   check('title').not().isEmpty().withMessage('Enter a reward title').isLength({ max: 100 }).withMessage('Reward name has to be below 100 characters'),
-  check('description').optional().isLength({ min: 5, max: 150 }).withMessage('Description has to be between 5 and 150 characters'),
-  check('price').isEmpty().withMessage('Set a price for the reward').isNumeric().withMessage('Price has to be a number'),
+  check('description').optional().isLength({ min: 5, max: 100 }).withMessage('Description has to be between 5 and 100 characters'),
+  check('price')
+    .isInt({ gt: 0, lt: 1000001 }).withMessage('Price has to be an integer and be between 1 and a million')
+    .not().isEmpty().withMessage('Set a price for the reward'),
   check('imageUrl').optional().isURL().withMessage('Provided image URL is invalid')
 ], async (req, res, next) => {
   const errors = validationResult(req);
@@ -34,22 +38,23 @@ router.post('/', passport.authenticate('jwt', { session: false }), [
   }
 
   try {
-    const currentHabits = await Habit.find({ userId: req.user.id });
-    if (currentHabits.length >= 10) {
-      return res.status(400).json({ errObj: { name: 'Maximum of 10 habits are allowed' } });
+    const currentRewards = await Reward.find({ userId: req.user.id });
+    if (currentRewards.length >= 20) {
+      return res.status(400).json({ title: 'Maximum of 20 rewards are allowed' });
     }
-    const { name, color, difficulty } = req.body;
-    const newHabit = new Habit({
-      name,
+    const { title, description, price, imageUrl } = req.body;
+    const newReward = new Reward({
+      title,
       userId: req.user.id,
-      difficulty,
-      color
+      description,
+      price,
+      imageUrl
     });
-    const habit = await newHabit.save();
-    res.status(201).json(habit);
+    const reward = await newReward.save();
+    res.status(201).json(reward);
   } catch (err) {
     console.log(err);
-    res.status(400).json({ msg: 'Habit creation failed' });
+    res.status(400).json({ msg: 'Reward creation failed' });
   }
 });
 

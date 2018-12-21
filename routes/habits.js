@@ -39,7 +39,7 @@ router.get('/', passport.authenticate('jwt', { session: false }), async (req, re
 // POST /api/habits
 // Private
 router.post('/', passport.authenticate('jwt', { session: false }), [
-  check('name').not().isEmpty().withMessage('Enter a habit name').isLength({ max: 100 }).withMessage('Habit name has to be below 100 characters'),
+  check('name').not().isEmpty().withMessage('Enter a habit name').trim().isLength({ max: 100 }).withMessage('Habit name has to be below 100 characters'),
   check('color').not().isEmpty().withMessage('Choose a color').isLength({ min: 4, max: 7 }).withMessage('Incorrect color format'),
   check('difficulty').not().isEmpty().withMessage('Difficulty not selected').isIn(['easy', 'medium', 'hard']).withMessage('Wrong difficulty')
 ], async (req, res, next) => {
@@ -72,7 +72,7 @@ router.post('/', passport.authenticate('jwt', { session: false }), [
 // PATCH /api/habits/:habitId
 // Private
 router.patch('/:habitId', passport.authenticate('jwt', { session: false }), [
-  check('editHabitName').not().isEmpty().withMessage('Enter a habit name').isLength({ max: 100 }).withMessage('Habit name has to be below 100 characters'),
+  check('editHabitName').not().isEmpty().withMessage('Enter a habit name').trim().isLength({ max: 100 }).withMessage('Habit name has to be below 100 characters'),
   check('editHabitColor').not().isEmpty().withMessage('Choose a color').isLength({ min: 4, max: 7 }).withMessage('Incorrect color format'),
   check('editHabitDiff').not().isEmpty().withMessage('Difficulty not selected').isIn(['easy', 'medium', 'hard']).withMessage('Wrong difficulty')
 ], async (req, res, next) => {

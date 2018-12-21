@@ -84,7 +84,6 @@ router.post('/login', [
 
     user.lastActiveDate = now;
     await user.save();
-
     const payload = {
       userId: user._id,
       username: user.username

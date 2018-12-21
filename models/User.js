@@ -10,6 +10,11 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
+  coins: {
+    type: Number,
+    default: 0,
+    required: true
+  },
   lastActiveDate: {
     type: Date,
     default: null
