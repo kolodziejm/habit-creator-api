@@ -46,13 +46,13 @@ router.post('/', passport.authenticate('jwt', { session: false }), [
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const errObj = createErrorObj(errors.array());
-    return res.status(400).json({ errObj });
+    return res.status(400).json(errObj);
   }
 
   try {
     const currentHabits = await Habit.find({ userId: req.user.id });
     if (currentHabits.length >= 10) {
-      return res.status(400).json({ errObj: { name: 'Maximum of 10 habits are allowed' } });
+      return res.status(400).json({ name: 'Maximum of 10 habits are allowed' });
     }
     const { name, color, difficulty } = req.body;
     const newHabit = new Habit({
@@ -79,14 +79,14 @@ router.patch('/:habitId', passport.authenticate('jwt', { session: false }), [
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const errObj = createErrorObj(errors.array());
-    return res.status(400).json({ errObj });
+    return res.status(400).json(errObj);
   }
 
   const { editHabitName, editHabitColor, editHabitDiff } = req.body;
   try {
     const habit = await Habit.findById(req.params.habitId);
     if (req.user.id !== habit.userId.toString()) {
-      return res.status(422).json({ errObj: { msg: 'Not authorized' } });
+      return res.status(422).json({ msg: 'Not authorized' });
     }
     habit.name = editHabitName;
     habit.color = editHabitColor;
@@ -95,7 +95,7 @@ router.patch('/:habitId', passport.authenticate('jwt', { session: false }), [
     res.json(updatedHabit);
   } catch (err) {
     console.log(err);
-    res.status(400).json({ errObj: { msg: 'Couldn\'t update the habit' } });
+    res.status(400).json({ msg: 'Couldn\'t update the habit' });
   }
 });
 

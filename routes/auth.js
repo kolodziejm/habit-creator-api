@@ -27,13 +27,13 @@ router.post('/register', [
     const errArr = errors.array();
     const errObj = createErrorObj(errArr);
     console.log(errObj);
-    return res.status(400).json({ errObj });
+    return res.status(400).json(errObj);
   }
 
   try {
     const user = await User.findOne({ username });
     if (user) {
-      return res.status(400).json({ errObj: { username: 'User with that name already exists' } });
+      return res.status(400).json({ username: 'User with that name already exists' });
     }
     const hashedPw = await bcrypt.hash(password, 12);
     const newUser = new User({
@@ -45,7 +45,7 @@ router.post('/register', [
 
   } catch (err) {
     console.log(err);
-    res.status(404).json({ errObj: { username: 'Register error' } });
+    res.status(404).json({ username: 'Register error' });
   }
 })
 
@@ -61,16 +61,16 @@ router.post('/login', [
     const errArr = errors.array();
     const errObj = createErrorObj(errArr);
     console.log(errObj);
-    return res.status(400).json({ errObj });
+    return res.status(400).json(errObj);
   }
 
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ username });
-    if (!user) return res.status(404).json({ errObj: { username: 'User doesn\'t exist' } });
+    if (!user) return res.status(404).json({ username: 'User doesn\'t exist' });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ errObj: { password: 'Wrong password' } });
+    if (!isMatch) return res.status(400).json({ password: 'Wrong password' });
 
     const now = new Date().toISOString();
     const userDaysDiff = differenceInCalendarDays(now, user.lastActiveDate)
@@ -95,7 +95,7 @@ router.post('/login', [
     });
   } catch (err) {
     console.log(err);
-    res.status(404).json({ errObj: { username: 'Login error' } });
+    res.status(404).json({ username: 'Login error' });
   }
 });
 
