@@ -89,7 +89,7 @@ router.patch('/edit/:id', passport.authenticate('jwt', { session: false }), [
 
   } catch (err) {
     console.log(err);
-    res.status(400).json({ msg: 'Reward creation failed' });
+    res.status(400).json({ msg: 'Reward edit failed' });
   }
 });
 
@@ -109,6 +109,25 @@ router.delete('/delete/:id', passport.authenticate('jwt', { session: false }), a
   }
 });
 
-// BUY ROUTE
+// PATCH /api/shop/buy/:id
+// Private
+router.patch('/buy/:id', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
+  try {
+    const reward = await Reward.findById(req.params.id);
+    const user = await User.findById(req.user.id);
+    if (reward.userId.toString() !== req.user.id.toString()) {
+      return res.status(422).json({ msg: 'Not authorized!' });
+    }
+    if (reward.price > user.coins) {
+      return res.status(400).json({ msg: 'You don\'t have enough coins!' });
+    }
+    user.coins -= reward.price;
+    await user.save();
+    res.status(200).json({ msg: 'Reward successfully purchased!' });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({ msg: 'Reward purchase failed' });
+  }
+});
 
 module.exports = router;
