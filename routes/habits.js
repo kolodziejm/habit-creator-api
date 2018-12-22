@@ -129,9 +129,31 @@ router.patch('/finish/:habitId', passport.authenticate('jwt', { session: false }
     }
     habit.isFinished = true;
     habit.lastDateFinished = new Date().toISOString();
+    const user = await User.findById(req.user.id);
+    let value, bonus;
+    switch (habit.difficulty) {
+      case 'easy':
+        bonus = 5, value = 50;
+        break;
+
+      case 'medium':
+        bonus = 15, value = 100;
+        break;
+
+      case 'hard':
+        bonus = 40, value = 200;
+        break;
+
+      default: {
+        bonus = 0, value = 0;
+      }
+    }
+    user.coins += value + bonus * habit.streak;
     habit.streak++;
     await habit.save();
-    res.json({ msg: 'Habit saved as finished!' });
+    await user.save();
+
+    res.json({ msg: 'Habit saved as finished!', coins: user.coins });
   } catch (err) {
     console.log(err);
     res.status(400).json({ msg: 'Couldn\'t finish the habit' });

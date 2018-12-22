@@ -109,4 +109,6 @@ router.delete('/delete/:id', passport.authenticate('jwt', { session: false }), a
   }
 });
 
+// BUY ROUTE
+
 module.exports = router;
