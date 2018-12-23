@@ -133,11 +133,11 @@ router.patch('/finish/:habitId', passport.authenticate('jwt', { session: false }
     let value, bonus;
     switch (habit.difficulty) {
       case 'easy':
-        bonus = 3, value = 50;
+        bonus = 2, value = 50;
         break;
 
       case 'medium':
-        bonus = 6, value = 100;
+        bonus = 5, value = 100;
         break;
 
       case 'hard':
