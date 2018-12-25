@@ -4,10 +4,12 @@ const { check, validationResult } = require('express-validator/check');
 
 const Habit = require('../models/Habit');
 const User = require('../models/User');
+const Achievement = require('../models/Achievement');
 
 const differenceInCalendarDays = require('date-fns/difference_in_calendar_days');
 
 const createErrorObj = require('../utils/createErrorObj');
+const handleAchievement = require('../utils/handleAchievement');
 
 const router = express.Router();
 
@@ -150,6 +152,56 @@ router.patch('/finish/:habitId', passport.authenticate('jwt', { session: false }
     }
     user.coins += value + bonus * habit.streak;
     habit.streak++;
+    const journey = await Achievement.findOne({ title: 'Journey has begun' });
+    console.log(`user coins: ${user.coins}, usersInArray: ${journey.usersWhoFinished}`)
+    if (!journey.usersWhoFinished.includes(req.user.id)) {
+      console.log('IF STATEMENT TRIGGERED')
+      journey.usersWhoFinished.push(req.user.id)
+      user.coins += journey.value;
+      await journey.save();
+    };
+    let coinsToAdd;
+    switch (habit.streak) {
+      case 3: {
+        // const freshman = await Achievement.findOne({ title: 'Freshman' });
+        // if (!freshman.usersWhoFinished.includes(req.user.id)) {
+        //   freshman.usersWhoFinished.push(req.user.id);
+        //   user.coins += freshman.value;
+        //   await freshman.save();
+        // }
+        console.log('CASE 3 TRIGGERED')
+        coinsToAdd = await handleAchievement('Freshman', req.user.id);
+      }
+        break;
+      case 7: {
+
+      }
+        break;
+      case 14: {
+
+      }
+        break;
+      case 30: {
+
+      }
+        break;
+      case 90: {
+
+      }
+        break;
+      case 180: {
+
+      }
+        break;
+      case 365: {
+
+      }
+        break;
+    }
+    console.log(`cointToAdd ${coinsToAdd}`);
+    console.log(`user coins before adding ${user.coins}`)
+    user.coins += coinsToAdd;
+    console.log(`user coins after adding: ${user.coins}`);
     await habit.save();
     await user.save();
     res.json({ msg: 'Habit saved as finished!', coins: user.coins, value, bonus: bonus * (habit.streak - 1) });
