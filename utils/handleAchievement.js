@@ -6,5 +6,7 @@ module.exports = async (title, userId) => {
     achievement.usersWhoFinished.push(userId);
     await achievement.save();
     return achievement.value;
+  } else {
+    return 0;
   }
 }

@@ -21,6 +21,7 @@ router.get('/', passport.authenticate('jwt', { session: false }), async (req, re
     const now = new Date().toISOString();
     const userDaysDiff = differenceInCalendarDays(now, user.lastActiveDate)
     if (userDaysDiff >= 1) {
+      // CHECK HABIT.STREAK >= 7, if so, and user didn't finish it earlier - fail achievement
       await Habit.updateMany({ isFinished: false }, { streak: 0 });
       await Habit.updateMany({}, { isFinished: false });
       if (userDaysDiff >= 2) {
@@ -155,52 +156,54 @@ router.patch('/finish/:habitId', passport.authenticate('jwt', { session: false }
     const journey = await Achievement.findOne({ title: 'Journey has begun' });
     console.log(`user coins: ${user.coins}, usersInArray: ${journey.usersWhoFinished}`)
     if (!journey.usersWhoFinished.includes(req.user.id)) {
-      console.log('IF STATEMENT TRIGGERED')
+      console.log('JOURNEY ACHIEVEMENT TRIGGERED')
       journey.usersWhoFinished.push(req.user.id)
       user.coins += journey.value;
       await journey.save();
     };
-    let coinsToAdd;
+    let achievementCoins;
     switch (habit.streak) {
       case 3: {
-        // const freshman = await Achievement.findOne({ title: 'Freshman' });
-        // if (!freshman.usersWhoFinished.includes(req.user.id)) {
-        //   freshman.usersWhoFinished.push(req.user.id);
-        //   user.coins += freshman.value;
-        //   await freshman.save();
-        // }
         console.log('CASE 3 TRIGGERED')
-        coinsToAdd = await handleAchievement('Freshman', req.user.id);
+        achievementCoins = await handleAchievement('Freshman', req.user.id);
       }
         break;
       case 7: {
-
+        console.log('CASE 7 TRIGGERED')
+        achievementCoins = await handleAchievement('On the right track', req.user.id);
       }
         break;
       case 14: {
-
+        console.log('CASE 14 TRIGGERED')
+        achievementCoins = await handleAchievement('Making progress', req.user.id);
       }
         break;
       case 30: {
-
+        console.log('CASE 30 TRIGGERED')
+        achievementCoins = await handleAchievement('Entire month', req.user.id);
       }
         break;
       case 90: {
-
+        console.log('CASE 90 TRIGGERED')
+        achievementCoins = await handleAchievement('A quarter', req.user.id);
       }
         break;
       case 180: {
-
+        console.log('CASE 180 TRIGGERED')
+        achievementCoins = await handleAchievement('Owning it', req.user.id);
       }
         break;
       case 365: {
-
+        console.log('CASE 365 TRIGGERED')
+        achievementCoins = await handleAchievement('Godlike', req.user.id);
       }
         break;
+      default:
+        achievementCoins = 0;
     }
-    console.log(`cointToAdd ${coinsToAdd}`);
+    console.log(`achievementCoins: ${achievementCoins}`);
     console.log(`user coins before adding ${user.coins}`)
-    user.coins += coinsToAdd;
+    user.coins += achievementCoins;
     console.log(`user coins after adding: ${user.coins}`);
     await habit.save();
     await user.save();
