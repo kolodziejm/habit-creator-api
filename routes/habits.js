@@ -20,19 +20,25 @@ router.get('/', passport.authenticate('jwt', { session: false }), async (req, re
     const user = await User.findById(req.user.id);
     const now = new Date().toISOString();
     const userDaysDiff = differenceInCalendarDays(now, user.lastActiveDate)
+    let failAchievValue = 0;
     if (userDaysDiff >= 1) {
-      // CHECK HABIT.STREAK >= 7, if so, and user didn't finish it earlier - fail achievement
+      const habitsArray = await Habit.find({ userId: req.user.id });
+      if (habitsArray.some(habit => habit.streak >= 7 && !habit.isFinished)) {
+        failAchievValue += await handleAchievement('I don\'t feel like doing it today', req.user.id);
+      }
       await Habit.updateMany({ isFinished: false }, { streak: 0 });
       await Habit.updateMany({}, { isFinished: false });
       if (userDaysDiff >= 2) {
         await Habit.updateMany({}, { streak: 0 })
       }
       user.lastActiveDate = now;
+      user.coins += failAchievValue;
       await user.save();
     }
     const habits = await Habit.find({ userId: req.user.id }).sort({ createdAt: -1 });
-    res.json(habits);
+    res.json({ habits, failAchievValue, coins: user.coins });
   } catch (err) {
+    console.log(err)
     res.status(404).json({
       msg: 'Couldn\'t fetch habits'
     });
@@ -153,58 +159,49 @@ router.patch('/finish/:habitId', passport.authenticate('jwt', { session: false }
     }
     user.coins += value + bonus * habit.streak;
     habit.streak++;
-    const journey = await Achievement.findOne({ title: 'Journey has begun' });
-    console.log(`user coins: ${user.coins}, usersInArray: ${journey.usersWhoFinished}`)
-    if (!journey.usersWhoFinished.includes(req.user.id)) {
-      console.log('JOURNEY ACHIEVEMENT TRIGGERED')
-      journey.usersWhoFinished.push(req.user.id)
-      user.coins += journey.value;
-      await journey.save();
-    };
-    let achievementCoins;
+    let achievementCoins = 0;
+    const journeyAchCoins = await handleAchievement('Journey has begun', req.user.id);
+    achievementCoins += journeyAchCoins;
     switch (habit.streak) {
       case 3: {
         console.log('CASE 3 TRIGGERED')
-        achievementCoins = await handleAchievement('Freshman', req.user.id);
+        achievementCoins += await handleAchievement('Freshman', req.user.id);
       }
         break;
       case 7: {
         console.log('CASE 7 TRIGGERED')
-        achievementCoins = await handleAchievement('On the right track', req.user.id);
+        achievementCoins += await handleAchievement('On the right track', req.user.id);
       }
         break;
       case 14: {
         console.log('CASE 14 TRIGGERED')
-        achievementCoins = await handleAchievement('Making progress', req.user.id);
+        achievementCoins += await handleAchievement('Making progress', req.user.id);
       }
         break;
       case 30: {
         console.log('CASE 30 TRIGGERED')
-        achievementCoins = await handleAchievement('Entire month', req.user.id);
+        achievementCoins += await handleAchievement('Entire month', req.user.id);
       }
         break;
       case 90: {
         console.log('CASE 90 TRIGGERED')
-        achievementCoins = await handleAchievement('A quarter', req.user.id);
+        achievementCoins += await handleAchievement('A quarter', req.user.id);
       }
         break;
       case 180: {
         console.log('CASE 180 TRIGGERED')
-        achievementCoins = await handleAchievement('Owning it', req.user.id);
+        achievementCoins += await handleAchievement('Owning it', req.user.id);
       }
         break;
       case 365: {
         console.log('CASE 365 TRIGGERED')
-        achievementCoins = await handleAchievement('Godlike', req.user.id);
+        achievementCoins += await handleAchievement('Godlike', req.user.id);
       }
         break;
       default:
-        achievementCoins = 0;
+        achievementCoins;
     }
-    console.log(`achievementCoins: ${achievementCoins}`);
-    console.log(`user coins before adding ${user.coins}`)
     user.coins += achievementCoins;
-    console.log(`user coins after adding: ${user.coins}`);
     await habit.save();
     await user.save();
     res.json({ msg: 'Habit saved as finished!', coins: user.coins, value, bonus: bonus * (habit.streak - 1) });
