@@ -74,16 +74,22 @@ router.post('/login', [
 
     const now = new Date().toISOString();
     const userDaysDiff = differenceInCalendarDays(now, user.lastActiveDate)
-    if (userDaysDiff >= 1) {
-      await Habit.updateMany({ isFinished: false }, { streak: 0 });
-      await Habit.updateMany({}, { isFinished: false });
+    console.log({ userDaysDiff, user }, user.lastActiveDate);
+    if (userDaysDiff >= 1 && user.lastActiveDate !== null) {
+      console.log('INSIDE AUTH userdaysdiff >=1 in AUTH')
+      await Habit.updateMany({ userId: user._id, isFinished: false }, { streak: 0 });
+      await Habit.updateMany({ userId: user._id }, { isFinished: false });
       if (userDaysDiff >= 2) {
-        await Habit.updateMany({}, { streak: 0 })
+        console.log('INSIDE AUTH userdaysdiff >=2 in AUTH')
+        await Habit.updateMany({ userId: user._id }, { streak: 0 })
       }
+      user.lastActiveDate = now;
+      await user.save();
+    } else if (user.lastActiveDate === null) {
+      console.log('ELSE IF NULL auth')
+      user.lastActiveDate = now;
+      await user.save();
     }
-
-    user.lastActiveDate = now;
-    await user.save();
     const payload = {
       userId: user._id,
       username: user.username
