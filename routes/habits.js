@@ -21,10 +21,7 @@ router.get('/', passport.authenticate('jwt', { session: false }), async (req, re
     const now = new Date().toISOString();
     const userDaysDiff = differenceInCalendarDays(now, user.lastActiveDate)
     let failAchievValue = 0;
-    console.log({ now }, user.lastActiveDate)
-    console.log({ userDaysDiff })
     if (userDaysDiff >= 1 && user.lastActiveDate !== null) {
-      console.log('INSIDE >= 1 STATEMENT in GET', { user })
       const habitsArray = await Habit.find({ userId: req.user.id });
       if (habitsArray.some(habit => habit.streak >= 7 && !habit.isFinished)) {
         failAchievValue += await handleAchievement('I don\'t feel like doing it today', req.user.id);
@@ -32,7 +29,6 @@ router.get('/', passport.authenticate('jwt', { session: false }), async (req, re
       await Habit.updateMany({ userId: req.user.id, isFinished: false }, { streak: 0 });
       await Habit.updateMany({ userId: req.user.id }, { isFinished: false });
       if (userDaysDiff >= 2) {
-        console.log('INSIDE >= 2 STATEMENT in GET')
         await Habit.updateMany({ userId: req.user.id }, { streak: 0 })
       }
       user.lastActiveDate = now;
