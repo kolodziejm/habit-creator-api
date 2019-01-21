@@ -16,7 +16,12 @@ const db = require('./config/keys').mongoURI;
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+const corsOptions = {
+  origin: 'https://kolodziejm.github.io',
+  optionsSuccessStatus: 200
+}
+
+app.use(cors(corsOptions));
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
